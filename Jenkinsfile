@@ -10,10 +10,16 @@ pipeline {
 	    jdk "OracleJDK8"
 	}
 
+    environment {
+        registryCredential = 'ecr:us-east-1:awscreds'
+        appRegistry = "296925920293.dkr.ecr.us-east-1.amazonaws.com/vprofileappimg"
+        vprofileRegistry = "https://296925920293.dkr.ecr.us-east-1.amazonaws.com"
+    }
+
 	stages {
 	    stage('Fetch code') {
             steps {
-               git branch: 'Testing_Development', url: 'https://github.com/iamreymond/CI-Jenkins.git'
+               git branch: 'PAAC_CI_Docker_ECR', url: 'https://github.com/iamreymond/CI-Jenkins.git'
             }
 
 	    }
@@ -65,38 +71,23 @@ pipeline {
             }
 	    }
 
-        stage('Upload Artifact') {
+        stage('Build App Image') {
             steps {
-                nexusArtifactUploader(
-                  nexusVersion: 'nexus3',
-                  protocol: 'http',
-                  nexusUrl: '18.215.160.245:8081',
-                  groupId: 'QA',
-                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-                  repository: 'vprofile-repo',
-                  credentialsId: 'nexuslogin',
-                  artifacts: [
-                    [artifactId: 'vproapp',
-                     classifier: '',
-                     file: 'target/vprofile-v2.war',
-                     type: 'war'
-                        ]
-                     
-                    ]
-
-                )
-
-            }
-            
-            post {
-                always {
-                    echo 'Slack Notifications'
-                    slackSend channel: '#jenkinscicd',
-                    color: COLOR_MAP[currentBuild.currentResult.toString()], 
-                    message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+                script {
+                    dockerImage = docker.build (appRegistry + ":$BUILD_NUMBER", "./Docker-files/app/multistage/")
                 }
             }
+        }
 
+        stage('Upload App Image') {
+            steps {
+                script {
+                    docker.withRegistry (vprofileRegistry, registryCredential) {
+                        dockerImage.push("$BUILD_NUMBER")
+                        dockerImage.push('latest')
+                    }
+                }
+            }
         }
 
     }
