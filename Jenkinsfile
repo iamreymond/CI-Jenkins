@@ -31,7 +31,7 @@ pipeline {
                 sh 'mvn test'
             }
         }
-        
+
         stage('Sonar Analysis') {
             environment {
                 scannerHome = tool 'sonar4.7'
@@ -75,9 +75,11 @@ pipeline {
                      classifier: '',
                      file: 'target/vprofile-v2.war',
                      type: 'war'
-                     ]
+                        ]
                      
-                ]
+                    ]
+
+                )
 
             }
 
