@@ -60,7 +60,7 @@ pipeline {
         stage('Build App Image') {
             steps {
                 script {
-                    dockerImage = docker.build(appRegistry + ":$BUILD_NUMBER", ".")
+                    dockerImage = docker.build(appRegistry + ":$BUILD_NUMBER", "./CI-Jenkins")
                 }
             }
         }
