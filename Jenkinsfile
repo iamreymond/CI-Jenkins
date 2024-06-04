@@ -10,10 +10,17 @@ pipeline {
 	    jdk "OracleJDK8"
 	}
 
+    environment {
+        registryCredential = 'ecr:us-east-1:awscreds'
+        appRegistry = "296925920293.dkr.ecr.us-east-1.amazonaws.com/vprofileappimg"
+        vprofileRegistry = "https://296925920293.dkr.ecr.us-east-1.amazonaws.com"
+        
+    }
+
 	stages {
 	    stage('Fetch code') {
             steps {
-               git branch: 'Testing_Development', url: 'https://github.com/iamreymond/CI-Jenkins.git'
+               git branch: 'PAAC_CI_Docker_ECR', url: 'https://github.com/iamreymond/CI-Jenkins.git'
             }
 
 	    }
@@ -55,7 +62,7 @@ pipeline {
             }
         }
 
-        stage('Quality Gates') {
+        stage("Quality Gate") {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
                     // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
@@ -63,40 +70,34 @@ pipeline {
                     waitForQualityGate abortPipeline: true
                 }
             }
-	    }
+        }
 
-        stage('Upload Artifact') {
+        
+        stage('Build App Image') {
             steps {
-                nexusArtifactUploader(
-                  nexusVersion: 'nexus3',
-                  protocol: 'http',
-                  nexusUrl: '34.229.161.56:8081',
-                  groupId: 'QA',
-                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-                  repository: 'vprofile-repo',
-                  credentialsId: 'nexuslogin',
-                  artifacts: [
-                    [artifactId: 'vproapp',
-                     classifier: '',
-                     file: 'target/vprofile-v2.war',
-                     type: 'war'
-                        ]
-                     
-                    ]
-
-                )
-
+                script {
+                    dockerImage = docker.build(appRegistry + ":$BUILD_NUMBER", ".")
+                }
             }
-            
+        }
+
+        stage('Upload App Image') {
+            steps {
+                script {
+                    docker.withRegistry(vprofileRegistry, registryCredential) {
+                        dockerImage.push("$BUILD_NUMBER")
+                        dockerImage.push('latest')
+                    }
+                }
+            }
             post {
                 always {
                     echo 'Slack Notifications'
                     slackSend channel: '#jenkinscicd',
-                    color: COLOR_MAP[currentBuild.currentResult.toString()], 
-                    message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+                        color: COLOR_MAP[currentBuild.currentResult],
+                        message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
                 }
             }
-
         }
 
     }
