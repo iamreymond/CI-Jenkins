@@ -13,7 +13,7 @@ pipeline {
 	stages {
 	    stage('Fetch code') {
             steps {
-               git branch: 'PAAC_CI_Sonar_Nexus', url: 'https://github.com/iamreymond/CI-Jenkins.git'
+               git branch: 'PAAC_CI_Sonar_Nexus', url: 'https://github.com/iamreymond/CICD-Jenkins.git'
             }
 
 	    }
