@@ -1,4 +1,4 @@
 
 
 
-![CI-Jenkins](CI-Jenkins.png)
+![CI_Sonar_Nexus](CI_Sonar_Nexus.png)
