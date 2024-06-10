@@ -1,7 +1,7 @@
 FROM openjdk:11 AS BUILD_IMAGE
 RUN apt update && apt install maven -y
-RUN git clone https://github.com/iamreymond/CI-Jenkins.git
-RUN cd CI-Jenkins && git checkout PAAC_CI_Docker_ECR && mvn install
+RUN git clone https://github.com/iamreymond/CICD-Jenkins.git
+RUN cd CICD-Jenkins && git checkout PAAC_CI_Docker_ECR && mvn install
 
 FROM tomcat:9-jre11
 
