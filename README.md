@@ -1,4 +1,4 @@
 
 
 
-![CI-Jenkins](CI-Jenkins.png)
+![CICD-Jenkins](CICD-Jenkins.png)
